@@ -1,5 +1,3 @@
-Test test
-
 # Cahier des charges
 
 ## 1. Présentation générale du projet
