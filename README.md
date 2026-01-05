@@ -1,35 +1,33 @@
-# Raspberry-project-learn
-
 # Cahier des charges
 
 ## 1. Présentation générale du projet
 
 ### 1.1 Contexte
 
-Ce projet a pour objectif de développer une application embarquée en langage **C** sur une **Raspberry Pi**, afin de renforcer les compétences en développement logiciel bas niveau, proches des contraintes rencontrées en environnement industriel ou embarqué.
+Ce projet a pour objectif de développer une **application embarquée en langage C** sur une **Arduino MEGA 2560**, afin de renforcer les compétences en développement bas niveau, proches des contraintes rencontrées en **systèmes embarqués temps réel** et en électronique industrielle.
 
-Le projet est volontairement structuré comme un **mini-projet professionnel**, avec des exigences fonctionnelles, techniques et des critères de validation clairs.
+Le projet est structuré comme un **mini-projet professionnel**, avec des exigences fonctionnelles, techniques et des critères de validation clairs.
 
 ### 1.2 Intitulé du projet
 
-**Station de supervision environnementale connectée**
+**Station de supervision environnementale embarquée (Arduino MEGA)**
 
 ### 1.3 Objectifs pédagogiques
 
 Objectifs principaux :
 
-* Maîtriser le langage **C** dans un contexte réel
-* Comprendre l’interaction **logiciel / matériel**
-* Apprendre à structurer un projet C de taille moyenne
-* Utiliser Git/GitHub dans un workflow propre
+* Maîtriser le langage **C embarqué** (sans OS)
+* Comprendre le fonctionnement d’un **microcontrôleur AVR**
+* Interagir directement avec le matériel (registres, interruptions)
+* Structurer un projet C embarqué de taille moyenne
 
 Compétences ciblées :
 
-* Programmation C (structures, pointeurs, gestion mémoire)
-* Programmation système Linux
-* Accès matériel (GPIO, I2C, SPI)
-* Gestion d’erreurs et robustesse logicielle
-* Architecture logicielle modulaire
+* Programmation C bas niveau
+* Architecture logicielle embarquée
+* Gestion du temps (timers, interruptions)
+* Communication série, I2C, SPI
+* Gestion mémoire sur microcontrôleur
 
 ---
 
@@ -40,9 +38,9 @@ Compétences ciblées :
 Le système doit permettre de :
 
 * Mesurer des données environnementales via des capteurs
-* Traiter et stocker ces données
-* Les afficher localement
-* Les transmettre à un utilisateur (console ou réseau)
+* Traiter ces données localement
+* Les transmettre à un utilisateur via liaison série
+* Signaler des alertes via LED ou buzzer
 
 ### 2.2 Fonctions détaillées
 
@@ -57,29 +55,25 @@ Le système doit permettre de :
 #### F2 – Traitement des données
 
 * Moyenne glissante
-* Détection de seuils (alerte)
-* Filtrage simple du bruit
+* Détection de dépassement de seuils
+* Mise à l’échelle des valeurs
 
-#### F3 – Affichage local
+#### F3 – Interface utilisateur série
 
-* Affichage via :
+* Communication via **UART (USB)**
+* Menu texte accessible depuis un terminal PC
 
-  * Console (CLI)
-  * OU écran LCD (option avancée)
+#### F4 – Signalisation locale
 
-#### F4 – Stockage des données
+* LED d’état (OK / Alerte)
+* Buzzer (optionnel)
 
-* Enregistrement dans un fichier local
-* Format texte structuré (CSV ou log)
+#### F5 – Configuration utilisateur
 
-#### F5 – Interface utilisateur
+* Modification des paramètres via commandes série :
 
-* Menu en ligne de commande
-* Commandes pour :
-
-  * Démarrer / arrêter les mesures
-  * Modifier la période d’échantillonnage
-  * Consulter l’historique
+  * Période d’échantillonnage
+  * Seuils d’alerte
 
 ---
 
@@ -87,29 +81,29 @@ Le système doit permettre de :
 
 ### 3.1 Matériel
 
-* Raspberry Pi (3, 4 ou équivalent)
-* Carte SD avec Raspberry Pi OS
-* Capteurs compatibles (exemples) :
+* Arduino **MEGA 2560**
+* Capteurs compatibles :
 
   * DHT11 / DHT22
   * BME280
-* Connexion GPIO / I2C
+* LED + résistances
+* (Optionnel) Buzzer
 
 ### 3.2 Logiciel
 
-* Langage : **C (C99 minimum)**
-* OS : Linux (Raspberry Pi OS)
-* Compilation : `gcc`
-* Build system : `Makefile`
+* Langage : **C (AVR-GCC)**
+* Pas de système d’exploitation
+* Accès direct au matériel
+* Utilisation possible de l’IDE Arduino **uniquement comme outil de compilation**
 
 ### 3.3 Contraintes de développement
 
-* Pas de frameworks haut niveau
-* Utilisation limitée de bibliothèques externes
+* Interdiction d’utiliser les fonctions Arduino haut niveau (`digitalWrite`, `delay`, etc.)
 * Accès matériel via :
 
-  * `/sys/class/gpio`
-  * `/dev/i2c-*`
+  * Registres AVR
+  * Timers matériels
+  * Interruptions
 
 ---
 
@@ -122,26 +116,25 @@ project/
 │── src/
 │   ├── main.c
 │   ├── sensor.c
-│   ├── display.c
-│   ├── storage.c
-│   ├── menu.c
+│   ├── uart.c
+│   ├── timer.c
+│   ├── alert.c
 │── include/
 │   ├── sensor.h
-│   ├── display.h
-│   ├── storage.h
-│   ├── menu.h
-│── data/
+│   ├── uart.h
+│   ├── timer.h
+│   ├── alert.h
 │── Makefile
 │── README.md
 ```
 
 ### 4.2 Description des modules
 
-* **main** : point d’entrée, orchestration
-* **sensor** : communication capteurs
-* **display** : affichage console/LCD
-* **storage** : gestion fichiers
-* **menu** : interface utilisateur
+* **main** : boucle principale, machine d’état
+* **sensor** : gestion capteurs
+* **uart** : communication série
+* **timer** : gestion du temps
+* **alert** : LED / buzzer
 
 ---
 
@@ -150,83 +143,80 @@ project/
 ### 5.1 Qualité du code
 
 * Code commenté
-* Fonctions courtes et claires
-* Nommage explicite
+* Fonctions courtes
+* Pas de variables globales inutiles
 
 ### 5.2 Robustesse
 
-* Gestion des erreurs matérielles
-* Vérification des retours système
-* Aucune fuite mémoire
+* Gestion des erreurs capteurs
+* Watchdog activé
+* Comportement déterministe
 
 ### 5.3 Performance
 
-* Faible utilisation CPU
-* Temps de réponse < 100 ms pour les commandes
+* Respect des contraintes temps réel
+* Boucle principale non bloquante
 
 ---
 
-## 6. Gestion de projet & Git
+## 6. Gestion du temps et interruptions
 
-### 6.1 Organisation Git
+* Utilisation d’un **timer matériel**
+* Interruptions périodiques
+* Pas de `delay()`
+
+---
+
+## 7. Gestion de projet & Git
+
+### 7.1 Organisation Git
 
 * Branche `main` : stable
 * Branche `develop`
 * Branches `feature/*`
 
-### 6.2 Commits
+### 7.2 Commits
 
-* Petits commits
-* Messages clairs
+* Commits atomiques
+* Messages explicites
 
 ---
 
-## 7. Tests et validation
+## 8. Tests et validation
 
-### 7.1 Tests unitaires (simples)
+### 8.1 Tests unitaires (logiques)
 
-* Fonctions de traitement
-* Fonctions de stockage
+* Fonctions de calcul
+* Gestion des seuils
 
-### 7.2 Tests fonctionnels
+### 8.2 Tests fonctionnels
 
-* Lecture capteurs
-* Affichage correct
-* Enregistrement valide
+* Communication série stable
+* Acquisition capteurs fiable
 
-### 7.3 Critères de validation
+### 8.3 Critères de validation
 
 Le projet est validé si :
 
-* Les données sont correctement acquises
-* Le programme fonctionne sans crash 24h
-* Le code est lisible et structuré
+* Le système fonctionne en continu 24h
+* Les alertes sont fiables
+* Le code est lisible et maintenable
 
 ---
 
-## 8. Évolutions possibles (bonus)
+## 9. Évolutions possibles (bonus)
 
-* Serveur web embarqué
-* Envoi MQTT
-* Multithreading (pthread)
-* Service systemd
-* Cross-compilation
-
----
-
-## 9. Livrables attendus
-
-* Code source complet
-* README détaillé
-* Schéma de câblage
-* Journal de développement
+* EEPROM pour stockage configuration
+* Protocole série structuré
+* RTOS (FreeRTOS)
+* Bootloader personnalisé
 
 ---
 
 ## 10. Niveau de difficulté
 
-* Niveau : **Intermédiaire → Avancé**
-* Durée estimée : 3 à 6 semaines
+* Niveau : **Intermédiaire → Avancé (embarqué)**
+* Durée estimée : 4 à 8 semaines
 
 ---
 
